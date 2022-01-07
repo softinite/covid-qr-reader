@@ -30,7 +30,7 @@
               </b-container>
             </b-card-body>
           </b-card>
-          <video ref="scanner" width="420" v-show="scanInProgress"></video>
+          <video ref="scanner"></video>
           <b-card :title="questionTitle" v-show="questionnaireInProgress">
             <b-card-body>
               <b-container>
