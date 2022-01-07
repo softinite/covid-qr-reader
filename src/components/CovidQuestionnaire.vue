@@ -59,6 +59,8 @@
 <script>
 import QrScanner from 'qr-scanner'
 import {questions} from '@/questions'
+import qrScannerWorkerSource from '!!raw-loader!../../node_modules/qr-scanner/qr-scanner-worker.min.js';
+QrScanner.WORKER_PATH = URL.createObjectURL(new Blob([qrScannerWorkerSource]));
 
 export default {
   name: 'CovidQuestionnaire',
@@ -94,6 +96,7 @@ export default {
     startScanner() {
       this.scanInProgress = true
       this.errorMessage = null
+      this.qrScanner.start()
     },
     isQrCodeValid() {
       return this.qrCode && this.qrCode.length === 10
