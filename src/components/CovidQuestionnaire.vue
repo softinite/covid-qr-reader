@@ -1,6 +1,12 @@
 <template>
   <div>
     <b-container>
+      <b-row>
+        <b-col>
+          <h2 v-if="questionnaireInProgress">Questionnaire for {{childName}}</h2>
+          <h2 v-else>QR Code Scanner</h2>
+        </b-col>
+      </b-row>
       <b-row align-h="center" align-v="center">
         <b-col>
           <b-card title="Child Identification" v-show="showIdRequestScreen">
@@ -12,7 +18,9 @@
                   </b-col>
                 </b-row>
                 <b-row>
-                  <b-col><b-button :disabled="!cameraAvailable" :title="cameraMsg" variant="outline-primary" @click="startScanner">Scan QR code</b-button></b-col>
+                  <b-col>
+                    <b-button :disabled="!cameraAvailable" :title="cameraMsg" variant="outline-primary" @click="startScanner">Read QR code</b-button>
+                  </b-col>
                 </b-row>
                 <b-row>
                   <b-col>
@@ -30,13 +38,18 @@
               </b-container>
             </b-card-body>
           </b-card>
-          <video ref="scanner"></video>
+          <div v-show="scanInProgress">
+            <video ref="scanner" width="420"></video>
+            <div>
+              <b-button :disabled="!cameraAvailable" :title="cameraMsg" variant="outline-primary" @click="stopScanner">Stop</b-button>
+            </div>
+          </div>
           <b-card :title="questionTitle" v-show="questionnaireInProgress">
             <b-card-body>
               <b-container>
                 <b-row>
                   <b-col>
-                    <b-img alt="fever" title="fever" src="https://startpage.com/av/proxy-image?piurl=https%3A%2F%2Fwww.chop.edu%2Fsites%2Fdefault%2Ffiles%2Fhealth-tips-my-child-has-a-fever-now-what-16x9.jpg&sp=1641513209T62e5c4d1f67cfbbbd2ddcd6b230aa8b9c80e0ab12ef80812f73dfc4358953eb3"/>
+                    <b-img thumbnail fluid width="420" :alt="questionSymptom" :title="questionSymptom" :src="questionImage"/>
                   </b-col>
                 </b-row>
                 <b-row class="mt-2">
@@ -75,10 +88,17 @@ export default {
       qrCode: null,
       qrScanner: null,
       errorMessage: null,
-      currentQuestion: 0
+      currentQuestion: 0,
+      childName: null
     }
   },
   computed: {
+    questionSymptom() {
+      return questions[this.currentQuestion].symptom
+    },
+    questionImage() {
+      return questions[this.currentQuestion].imageSrc
+    },
     questionTitle() {
       return questions[this.currentQuestion].text
     },
@@ -90,8 +110,18 @@ export default {
     }
   },
   methods: {
+    receiveScanCode(code) {
+      this.qrCode = code
+      this.scanInProgress = false
+      this.qrScanner.stop()
+      this.validateCode()
+    },
     codeUpdatedManually() {
       this.errorMessage = null
+    },
+    stopScanner() {
+      this.qrScanner.stop()
+      this.scanInProgress = false
     },
     startScanner() {
       this.scanInProgress = true
@@ -107,6 +137,7 @@ export default {
     },
     validateCode() {
       if (this.isQrCodeValid()) {
+        this.childName = 'Joanne Doe'
         this.startQuestionnaire()
       } else {
         this.errorMessage = 'Invalid code'
@@ -120,7 +151,7 @@ export default {
           if (result === true) {
             this.cameraMsg = 'Start scanning'
             this.cameraAvailable = true
-            this.qrScanner = new QrScanner(this.$refs['scanner'], result => this.qrCode = result)
+            this.qrScanner = new QrScanner(this.$refs['scanner'], this.receiveScanCode)
           } else {
             this.cameraMsg = 'Camera not available'
           }

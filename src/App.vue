@@ -1,7 +1,6 @@
 <template>
   <div id="app">
     <h1 class="owen-title">Owen Community Learning Centre</h1>
-    <h2>QR Code Scanner</h2>
     <CovidQuestionnaire/>
   </div>
 </template>
