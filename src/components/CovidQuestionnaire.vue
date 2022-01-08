@@ -1,6 +1,6 @@
 <template>
   <div>
-    <b-container>
+    <b-container id="questionnaire" v-if="!accepted && !rejected">
       <b-row>
         <b-col>
           <h2 v-if="questionnaireInProgress">Questionnaire for {{childName}}</h2>
@@ -78,36 +78,42 @@
         </b-col>
       </b-row>
     </b-container>
+    <b-container id="entryAccepted" v-if="accepted">
+      <b-row align-v="center" align-h="center">
+        <b-col>
+          <b-card title="Thank you for taking the questionnaire">
+            <b-card-header>You are welcome to proceed</b-card-header>
+            <b-card-body>
+              <div>
+                <b-img src="/images/accepted.png" alt="Accepted" title="Accepted"/>
+              </div>
+              <div><small>Please feel free to close this window</small></div>
+            </b-card-body>
+          </b-card>
+        </b-col>
+      </b-row>
+    </b-container>
     <div ref="modals">
       <b-modal
           id="homeAndIsolate"
-          title="Selected symptom requires the following action(s)"
+          :title="homeAndIsolateTitle"
           ok-title="Acknowledge & Notify Staff"
           cancel-title="Go back"
           no-close-on-esc no-close-on-backdrop hide-header-close
       >
         <b-container>
           <b-row>
+            <b-col>
+              <h5>In order to help slow down the spread of COVID-19, the folowing actions are required:</h5>
+            </b-col>
+          </b-row>
+          <b-row align-v="center">
             <b-col cols="2"><b-img src="/images/home.png" alt="Stay home & self-isolate." title="Stay home & self-isolate."/></b-col>
-            <b-col cols="8">Stay home & self-isolate.</b-col>
+            <b-col cols="10">Stay home & self-isolate.</b-col>
           </b-row>
           <b-row class="mt-2">
             <b-col cols="2"><b-img src="/images/household.png" alt="Your household including siblings must self-isolate, regardless of vaccination status." title="Your household including siblings must self-isolate, regardless of vaccination status."/></b-col>
-            <b-col cols="8">Your household including siblings must self-isolate, regardless of vaccination status.</b-col>
-          </b-row>
-        </b-container>
-      </b-modal>
-      <b-modal
-          id="accepted"
-          title="Excellent!"
-          no-close-on-esc no-close-on-backdrop hide-footer hide-header-close size="sm"
-      >
-        <b-container>
-          <b-row>
-            <b-col><b-img src="/images/accepted.png" alt="Accepted" title="Accepted"/></b-col>
-          </b-row>
-          <b-row>
-            <b-col class="text-green"><b>You're good to go!</b></b-col>
+            <b-col cols="10">Your household including siblings must self-isolate, regardless of vaccination status.</b-col>
           </b-row>
         </b-container>
       </b-modal>
@@ -137,10 +143,15 @@ export default {
       currentQuestion: 0,
       currentSymptom: 0,
       childName: null,
-      childSymptoms: []
+      childSymptoms: [],
+      accepted: false,
+      rejected: false
     }
   },
   computed: {
+    homeAndIsolateTitle() {
+      return 'We\'re sorry to hear that ' + this.childName + ' is feeling unwell'
+    },
     questionFootprints() {
       return questions[this.currentQuestion].footprints
     },
@@ -171,7 +182,7 @@ export default {
         this.currentQuestion++
         this.currentSymptom = 0
       } else {
-        this.$bvModal.show('accepted')
+        this.accepted = true
       }
     },
     markSymptomAsPositive() {
