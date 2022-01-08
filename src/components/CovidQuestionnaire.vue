@@ -96,15 +96,16 @@
     <div ref="modals">
       <b-modal
           id="homeAndIsolate"
-          :title="homeAndIsolateTitle"
+          :title="symptomsPresentTitle"
           ok-title="Acknowledge & Notify Staff"
           cancel-title="Go back"
+          @cancel="removeLastSymptomAndCloseHomeAndIsolate"
           no-close-on-esc no-close-on-backdrop hide-header-close
       >
         <b-container>
           <b-row>
             <b-col>
-              <h5>In order to help slow down the spread of COVID-19, the folowing actions are required:</h5>
+              <h5>In order to help slow down the spread of COVID-19, the following actions are required:</h5>
             </b-col>
           </b-row>
           <b-row align-v="center">
@@ -116,6 +117,37 @@
             <b-col cols="10">Your household including siblings must self-isolate, regardless of vaccination status.</b-col>
           </b-row>
         </b-container>
+      </b-modal>
+      <b-modal
+          id="home24"
+          :title="symptomsPresentTitle"
+          ok-title="Acknowledge & Notify Staff"
+          cancel-title="Go back"
+          no-close-on-esc no-close-on-backdrop hide-header-close
+          @cancel="removeLastSymptomAndCloseHome24"
+      >
+        <b-container>
+          <b-row>
+            <b-col>
+              <h5>In order to help slow down the spread of COVID-19, the following actions are required:</h5>
+            </b-col>
+          </b-row>
+          <b-row align-v="center">
+            <b-col cols="2"><b-img src="/images/home.png" alt="Stay home." title="Stay home."/></b-col>
+            <b-col cols="10">{{childName}} must stay home for <b>{{homeHours}}</b> hours.</b-col>
+          </b-row>
+        </b-container>
+      </b-modal>
+      <b-modal
+          id="federalQuarantine"
+          title="We're not sure"
+          ok-title="Acknowledge & Notify Staff"
+          cancel-title="Go back"
+          @cancel="removeLastSymptomAndCloseFederalQuarantine"
+          no-close-on-esc no-close-on-backdrop hide-header-close
+      >
+          Please check with the latest guidelines from the federal government to see whether {{childName}} can attend Owen CLC today.
+          They can be found at the following <b-link target="_blank" href="https://travel.gc.ca/travel-covid/travel-restrictions/exemptions">link</b-link>.
       </b-modal>
     </div>
   </div>
@@ -145,11 +177,12 @@ export default {
       childName: null,
       childSymptoms: [],
       accepted: false,
-      rejected: false
+      rejected: false,
+      homeHours: 24
     }
   },
   computed: {
-    homeAndIsolateTitle() {
+    symptomsPresentTitle() {
       return 'We\'re sorry to hear that ' + this.childName + ' is feeling unwell'
     },
     questionFootprints() {
@@ -172,12 +205,27 @@ export default {
     }
   },
   methods: {
-    markQuestionnaireAsFilled() {
-
+    removeLastSymptomAndCloseHomeAndIsolate() {
+      this.childSymptoms.pop()
+      this.$bvModal.hide('homeAndIsolate')
+    },
+    removeLastSymptomAndCloseFederalQuarantine() {
+      this.childSymptoms.pop()
+      this.$bvModal.hide('federalQuarantine')
+    },
+    removeLastSymptomAndCloseHome24() {
+      this.childSymptoms.pop()
+      this.$bvModal.hide('home24')
     },
     markSymptomAsNegative() {
-      if (this.currentSymptom < questions[this.currentQuestion].symptoms.length - 1) {
+      const q = questions[this.currentQuestion]
+      const isPartBQuestion = q.idx === 2
+      const isLastSymptomForQuestion = this.currentSymptom === q.symptoms.length - 1
+      if (isLastSymptomForQuestion === false) {
         this.currentSymptom++
+      } else if (isPartBQuestion && this.childSymptoms.length > 0) {
+        this.homeHours = (this.childSymptoms[0].actionCode === 'home24') ? 24 : 48
+        this.$bvModal.show('home24')
       } else if (this.currentQuestion < questions.length - 1) {
         this.currentQuestion++
         this.currentSymptom = 0
@@ -186,9 +234,26 @@ export default {
       }
     },
     markSymptomAsPositive() {
-      const symptom = questions[this.currentQuestion].symptoms[this.currentSymptom]
+      const q = questions[this.currentQuestion]
+      const isPartBQuestion = q.idx === 2
+      const symptom = q.symptoms[this.currentSymptom]
       this.childSymptoms.push(symptom)
-      this.$bvModal.show(symptom.actionCode)
+      const homeAndIsolate = 'homeAndIsolate';
+      if (symptom.actionCode === homeAndIsolate) {
+        this.$bvModal.show(symptom.actionCode)
+      } else if (isPartBQuestion) {
+        const isLastSymptomFromThisQuestion = this.currentSymptom === q.symptoms.length - 1
+        if (this.childSymptoms.length > 1) {
+          this.$bvModal.show(homeAndIsolate)
+        } else if (isLastSymptomFromThisQuestion) {
+          this.homeHours = (symptom.actionCode === 'home48') ? 48 : 24
+          this.$bvModal.show('home24')
+        } else {
+          this.currentSymptom++
+        }
+      } else if (symptom.actionCode === 'federalQuarantine') {
+        this.$bvModal.show(symptom.actionCode)
+      }
     },
     receiveScanCode(code) {
       this.qrCode = code
