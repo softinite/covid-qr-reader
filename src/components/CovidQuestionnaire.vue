@@ -49,16 +49,28 @@
               <b-container>
                 <b-row>
                   <b-col>
-                    <b-img thumbnail fluid width="420" :alt="questionSymptom" :title="questionSymptom" :src="questionImage"/>
+                    <b-img thumbnail fluid width="110" height="110" rounded :alt="questionSymptom" :title="questionSymptom" :src="symptomImage"/>
+                  </b-col>
+                </b-row>
+                <b-row>
+                  <b-col>
+                    <h3>{{questionSymptom}}</h3>
                   </b-col>
                 </b-row>
                 <b-row class="mt-2">
                   <b-col>
-                    <b-button variant="outline-danger">Yes</b-button>
+                    <b-button variant="outline-danger" @click="markSymptomAsPositive">Yes</b-button>
                   </b-col>
                   <b-col>
-                    <b-button variant="primary">No (next question)</b-button>
+                    <b-button variant="primary" @click="markSymptomAsNegative">No</b-button>
                   </b-col>
+                </b-row>
+                <b-row class="mt-2">
+                  <b-container>
+                    <b-row v-for="footprint in questionFootprints" :key="footprint">
+                      <b-col><small>* {{footprint}}</small></b-col>
+                    </b-row>
+                  </b-container>
                 </b-row>
               </b-container>
             </b-card-body>
@@ -66,6 +78,40 @@
         </b-col>
       </b-row>
     </b-container>
+    <div ref="modals">
+      <b-modal
+          id="homeAndIsolate"
+          title="Selected symptom requires the following action(s)"
+          ok-title="Acknowledge & Notify Staff"
+          cancel-title="Go back"
+          no-close-on-esc no-close-on-backdrop hide-header-close
+      >
+        <b-container>
+          <b-row>
+            <b-col cols="2"><b-img src="/images/home.png" alt="Stay home & self-isolate." title="Stay home & self-isolate."/></b-col>
+            <b-col cols="8">Stay home & self-isolate.</b-col>
+          </b-row>
+          <b-row class="mt-2">
+            <b-col cols="2"><b-img src="/images/household.png" alt="Your household including siblings must self-isolate, regardless of vaccination status." title="Your household including siblings must self-isolate, regardless of vaccination status."/></b-col>
+            <b-col cols="8">Your household including siblings must self-isolate, regardless of vaccination status.</b-col>
+          </b-row>
+        </b-container>
+      </b-modal>
+      <b-modal
+          id="accepted"
+          title="Excellent!"
+          no-close-on-esc no-close-on-backdrop hide-footer hide-header-close size="sm"
+      >
+        <b-container>
+          <b-row>
+            <b-col><b-img src="/images/accepted.png" alt="Accepted" title="Accepted"/></b-col>
+          </b-row>
+          <b-row>
+            <b-col class="text-green"><b>You're good to go!</b></b-col>
+          </b-row>
+        </b-container>
+      </b-modal>
+    </div>
   </div>
 </template>
 
@@ -89,15 +135,20 @@ export default {
       qrScanner: null,
       errorMessage: null,
       currentQuestion: 0,
-      childName: null
+      currentSymptom: 0,
+      childName: null,
+      childSymptoms: []
     }
   },
   computed: {
-    questionSymptom() {
-      return questions[this.currentQuestion].symptom
+    questionFootprints() {
+      return questions[this.currentQuestion].footprints
     },
-    questionImage() {
-      return questions[this.currentQuestion].imageSrc
+    questionSymptom() {
+      return questions[this.currentQuestion].symptoms[this.currentSymptom].name
+    },
+    symptomImage() {
+      return questions[this.currentQuestion].symptoms[this.currentSymptom].image
     },
     questionTitle() {
       return questions[this.currentQuestion].text
@@ -110,6 +161,24 @@ export default {
     }
   },
   methods: {
+    markQuestionnaireAsFilled() {
+
+    },
+    markSymptomAsNegative() {
+      if (this.currentSymptom < questions[this.currentQuestion].symptoms.length - 1) {
+        this.currentSymptom++
+      } else if (this.currentQuestion < questions.length - 1) {
+        this.currentQuestion++
+        this.currentSymptom = 0
+      } else {
+        this.$bvModal.show('accepted')
+      }
+    },
+    markSymptomAsPositive() {
+      const symptom = questions[this.currentQuestion].symptoms[this.currentSymptom]
+      this.childSymptoms.push(symptom)
+      this.$bvModal.show(symptom.actionCode)
+    },
     receiveScanCode(code) {
       this.qrCode = code
       this.scanInProgress = false
@@ -129,7 +198,7 @@ export default {
       this.qrScanner.start()
     },
     isQrCodeValid() {
-      return this.qrCode && this.qrCode.length === 10
+      return this.qrCode && this.qrCode.length >= 10
     },
     startQuestionnaire() {
       this.currentQuestion = 0
