@@ -110,7 +110,36 @@
           </b-row>
           <b-row align-v="center">
             <b-col cols="2"><b-img src="/images/home.png" alt="Stay home & self-isolate." title="Stay home & self-isolate."/></b-col>
-            <b-col cols="10">Stay home & self-isolate.</b-col>
+            <b-col cols="10">
+              <h4>Stay home & self-isolate.</h4>
+              <div>Please see more details below.</div>
+              <b-list-group>
+                <b-list-group-item>
+                  <b-container>
+                    <b-row>
+                      <b-col><b>If child is immune compromised:</b></b-col>
+                      <b-col>
+                        <small>Must self-isolate for 10 days from the
+                        day their symptoms started, or longer
+                          if symptoms last longer than 10 days</small>
+                      </b-col>
+                    </b-row>
+                    <b-row>
+                      <b-col><b>All others:</b></b-col>
+                      <b-col>
+                        <small>Must self-isolate for at least 5 days
+                          from the day symptoms started
+                          and until symptoms have been
+                          improving for 24 hours (or 48
+                          hours if nausea/vomiting/diarrhea),
+                          whichever is longer</small>
+                      </b-col>
+                    </b-row>
+                  </b-container>
+                </b-list-group-item>
+                <b-list-group-item><small>Use test date if no symptoms</small></b-list-group-item>
+              </b-list-group>
+            </b-col>
           </b-row>
           <b-row class="mt-2">
             <b-col cols="2"><b-img src="/images/household.png" alt="Your household including siblings must self-isolate, regardless of vaccination status." title="Your household including siblings must self-isolate, regardless of vaccination status."/></b-col>
