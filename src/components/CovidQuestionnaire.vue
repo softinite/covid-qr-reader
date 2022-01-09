@@ -44,37 +44,16 @@
               <b-button :disabled="!cameraAvailable" :title="cameraMsg" variant="outline-primary" @click="stopScanner">Stop</b-button>
             </div>
           </div>
-          <b-card :title="questionTitle" v-show="questionnaireInProgress">
-            <b-card-body>
-              <b-container>
-                <b-row>
-                  <b-col>
-                    <b-img thumbnail fluid width="110" height="110" rounded :alt="questionSymptom" :title="questionSymptom" :src="symptomImage"/>
-                  </b-col>
-                </b-row>
-                <b-row>
-                  <b-col>
-                    <h3>{{questionSymptom}}</h3>
-                  </b-col>
-                </b-row>
-                <b-row class="mt-2">
-                  <b-col>
-                    <b-button variant="outline-danger" @click="markSymptomAsPositive">Yes</b-button>
-                  </b-col>
-                  <b-col>
-                    <b-button variant="primary" @click="markSymptomAsNegative">No</b-button>
-                  </b-col>
-                </b-row>
-                <b-row class="mt-2">
-                  <b-container>
-                    <b-row v-for="footprint in questionFootprints" :key="footprint">
-                      <b-col><small>* {{footprint}}</small></b-col>
-                    </b-row>
-                  </b-container>
-                </b-row>
-              </b-container>
-            </b-card-body>
-          </b-card>
+          <question
+              v-if="questionnaireInProgress"
+              :title="questionTitle"
+              :child-name="childName"
+              :footnotes="questionFootnotes"
+              :image-src="symptomImage"
+              :image-title="questionSymptom"
+              @yes="markSymptomAsPositive"
+              @no="markSymptomAsNegative"
+          />
         </b-col>
       </b-row>
     </b-container>
@@ -186,10 +165,12 @@
 import QrScanner from 'qr-scanner'
 import {questions} from '@/questions'
 import qrScannerWorkerSource from '!!raw-loader!../../node_modules/qr-scanner/qr-scanner-worker.min.js';
+import Question from "@/components/Question";
 QrScanner.WORKER_PATH = URL.createObjectURL(new Blob([qrScannerWorkerSource]));
 
 export default {
   name: 'CovidQuestionnaire',
+  components: {Question},
   props: {
   },
   data() {
@@ -214,8 +195,8 @@ export default {
     symptomsPresentTitle() {
       return 'We\'re sorry to hear that ' + this.childName + ' is feeling unwell'
     },
-    questionFootprints() {
-      return questions[this.currentQuestion].footprints
+    questionFootnotes() {
+      return questions[this.currentQuestion].footnotes
     },
     questionSymptom() {
       return questions[this.currentQuestion].symptoms[this.currentSymptom].name
