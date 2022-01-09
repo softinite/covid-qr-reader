@@ -1,51 +1,20 @@
 <template>
   <div>
-    <b-container id="questionnaire" v-if="!accepted && !rejected">
+    <b-container id="questionnaire">
       <b-row>
         <b-col>
-          <h2 v-if="questionnaireInProgress">Questionnaire for {{childName}}</h2>
-          <h2 v-else>QR Code Scanner</h2>
+          <h2>COVID-19 Screening</h2>
+          <div v-show="childName.length > 0">Child name: {{childName}}</div>
         </b-col>
       </b-row>
       <b-row align-h="center" align-v="center">
         <b-col>
-          <b-card title="Child Identification" v-show="showIdRequestScreen">
-            <b-card-body>
-              <b-container>
-                <b-row>
-                  <b-col>
-                    <span class="font-weight-bold text-danger" v-show="errorMessage">{{errorMessage}}</span>
-                  </b-col>
-                </b-row>
-                <b-row>
-                  <b-col>
-                    <b-button :disabled="!cameraAvailable" :title="cameraMsg" variant="outline-primary" @click="startScanner">Read QR code</b-button>
-                  </b-col>
-                </b-row>
-                <b-row>
-                  <b-col>
-                    <b-col class="font-weight-bold text-black">OR</b-col>
-                  </b-col>
-                </b-row>
-                <b-row>
-                  <b-col>
-                    <b-col><b-form-input v-model="qrCode" placeholder="Enter code manually" @input="codeUpdatedManually"></b-form-input></b-col>
-                  </b-col>
-                </b-row>
-                <b-row class="mt-2">
-                  <b-col><b-button variant="primary" :disabled="codeNotProvided" @click="validateCode">Go</b-button></b-col>
-                </b-row>
-              </b-container>
-            </b-card-body>
-          </b-card>
-          <div v-show="scanInProgress">
-            <video ref="scanner" width="420"></video>
-            <div>
-              <b-button :disabled="!cameraAvailable" :title="cameraMsg" variant="outline-primary" @click="stopScanner">Stop</b-button>
-            </div>
-          </div>
+          <identification-screen
+              v-show="identificationInProgress"
+              @id-confirmed="startQuestionnaire"
+          />
           <question
-              v-if="questionnaireInProgress"
+              v-show="questionnaireInProgress"
               :title="questionTitle"
               :child-name="childName"
               :footnotes="questionFootnotes"
@@ -54,147 +23,84 @@
               @yes="markSymptomAsPositive"
               @no="markSymptomAsNegative"
           />
+          <final-screen v-show="questionnaireCompleted" :accepted="accepted" :reasons="abscenceReasons"/>
+        </b-col>
+      </b-row>
+      <b-row class="mt-4">
+        <b-col class="fst-italic small">
+          This tool has been created based on Toronto Public Health (TPH) <b-link href="https://www.toronto.ca/wp-content/uploads/2021/06/994c-Screening-Questionnaire-Child-Care-Day-Camp-School.pdf" target="_blank">Questionnaire</b-link>. In case of any contradictions with the latter,
+          TPH version takes precedence.
         </b-col>
       </b-row>
     </b-container>
-    <b-container id="entryAccepted" v-if="accepted">
-      <b-row align-v="center" align-h="center">
-        <b-col>
-          <b-card title="Thank you for taking the questionnaire">
-            <b-card-header>You are welcome to proceed</b-card-header>
-            <b-card-body>
-              <div>
-                <b-img src="/images/accepted.png" alt="Accepted" title="Accepted"/>
-              </div>
-              <div><small>Please feel free to close this window</small></div>
-            </b-card-body>
-          </b-card>
-        </b-col>
-      </b-row>
-    </b-container>
-    <div ref="modals">
-      <b-modal
-          id="homeAndIsolate"
-          :title="symptomsPresentTitle"
-          ok-title="Acknowledge & Notify Staff"
-          cancel-title="Go back"
-          @cancel="removeLastSymptomAndCloseHomeAndIsolate"
-          no-close-on-esc no-close-on-backdrop hide-header-close
-      >
-        <b-container>
-          <b-row>
-            <b-col>
-              <h5>In order to help slow down the spread of COVID-19, the following actions are required:</h5>
-            </b-col>
-          </b-row>
-          <b-row align-v="center">
-            <b-col cols="2"><b-img src="/images/home.png" alt="Stay home & self-isolate." title="Stay home & self-isolate."/></b-col>
-            <b-col cols="10">
-              <h4>Stay home & self-isolate.</h4>
-              <div>Please see more details below.</div>
-              <b-list-group>
-                <b-list-group-item>
-                  <b-container>
-                    <b-row>
-                      <b-col><b>If child is immune compromised:</b></b-col>
-                      <b-col>
-                        <small>Must self-isolate for 10 days from the
-                        day their symptoms started, or longer
-                          if symptoms last longer than 10 days</small>
-                      </b-col>
-                    </b-row>
-                    <b-row>
-                      <b-col><b>All others:</b></b-col>
-                      <b-col>
-                        <small>Must self-isolate for at least 5 days
-                          from the day symptoms started
-                          and until symptoms have been
-                          improving for 24 hours (or 48
-                          hours if nausea/vomiting/diarrhea),
-                          whichever is longer</small>
-                      </b-col>
-                    </b-row>
-                  </b-container>
-                </b-list-group-item>
-                <b-list-group-item><small>Use test date if no symptoms</small></b-list-group-item>
-              </b-list-group>
-            </b-col>
-          </b-row>
-          <b-row class="mt-2">
-            <b-col cols="2"><b-img src="/images/household.png" alt="Your household including siblings must self-isolate, regardless of vaccination status." title="Your household including siblings must self-isolate, regardless of vaccination status."/></b-col>
-            <b-col cols="10">Your household including siblings must self-isolate, regardless of vaccination status.</b-col>
-          </b-row>
-        </b-container>
-      </b-modal>
-      <b-modal
-          id="home24"
-          :title="symptomsPresentTitle"
-          ok-title="Acknowledge & Notify Staff"
-          cancel-title="Go back"
-          no-close-on-esc no-close-on-backdrop hide-header-close
-          @cancel="removeLastSymptomAndCloseHome24"
-      >
-        <b-container>
-          <b-row>
-            <b-col>
-              <h5>In order to help slow down the spread of COVID-19, the following actions are required:</h5>
-            </b-col>
-          </b-row>
-          <b-row align-v="center">
-            <b-col cols="2"><b-img src="/images/home.png" alt="Stay home." title="Stay home."/></b-col>
-            <b-col cols="10">{{childName}} must stay home for <b>{{homeHours}}</b> hours.</b-col>
-          </b-row>
-        </b-container>
-      </b-modal>
-      <b-modal
-          id="federalQuarantine"
-          title="We're not sure"
-          ok-title="Acknowledge & Notify Staff"
-          cancel-title="Go back"
-          @cancel="removeLastSymptomAndCloseFederalQuarantine"
-          no-close-on-esc no-close-on-backdrop hide-header-close
-      >
-          Please check with the latest guidelines from the federal government to see whether {{childName}} can attend Owen CLC today.
-          They can be found at the following <b-link target="_blank" href="https://travel.gc.ca/travel-covid/travel-restrictions/exemptions">link</b-link>.
-      </b-modal>
-    </div>
+    <confirmation-popup
+        :required-actions="popupRequiredActions"
+        :bus="popupBus"
+        @back="cancelLastSymptom"
+        @acknowledged="notifyStaffAboutChildSymptoms"
+    />
   </div>
 </template>
 
 <script>
-import QrScanner from 'qr-scanner'
 import {questions} from '@/questions'
-import qrScannerWorkerSource from '!!raw-loader!../../node_modules/qr-scanner/qr-scanner-worker.min.js';
 import Question from "@/components/Question";
-QrScanner.WORKER_PATH = URL.createObjectURL(new Blob([qrScannerWorkerSource]));
+import ConfirmationPopup from "@/components/ConfirmationPopup";
+import FinalScreen from "@/components/FinalScreen";
+import IdentificationScreen from "@/components/IdentificationScreen";
+import Vue from 'vue'
+
+const requiredActionsForCovidSymptoms = [
+  {
+    title: 'Stay home & self-isolate.',
+    description: 'If child is immune compromised, then he/she must self-isolate for 10 days from the day their symptoms started, or longer' +
+        ' if symptoms last longer than 10 days. ' +
+        'Otherwise, she/he must self-isolate for at least 5 days from the day symptoms started and until symptoms have been ' +
+        'improving for 24 hours (or 48 hours if nausea/vomiting/diarrhea), whichever is longer.',
+    imageSrc: '/images/home.png'
+  },
+  {
+    title: 'Your household including siblings must self-isolate, regardless of vaccination status.',
+    description: 'Your household including siblings must self-isolate, regardless of vaccination status.',
+    imageSrc: '/images/household.png'
+  }
+]
+
+const requiredActionsWhenTestedPositive = [
+  {
+    title: requiredActionsForCovidSymptoms[0].title,
+    description: requiredActionsForCovidSymptoms[0].description + ' Use test date if no symptoms.',
+    imageSrc: requiredActionsForCovidSymptoms[0].imageSrc
+  },
+  {
+    title: requiredActionsForCovidSymptoms[1].title,
+    description: requiredActionsForCovidSymptoms[1].description,
+    imageSrc: requiredActionsForCovidSymptoms[1].imageSrc
+  }
+]
 
 export default {
   name: 'CovidQuestionnaire',
-  components: {Question},
+  components: {IdentificationScreen, FinalScreen, ConfirmationPopup, Question},
   props: {
   },
   data() {
     return {
-      scanInProgress: false,
-      cameraAvailable: false,
+      identificationInProgress: true,
       questionnaireInProgress: false,
-      cameraMsg: 'Checking camera if camera is available...',
-      qrCode: null,
-      qrScanner: null,
-      errorMessage: null,
+      questionnaireCompleted: false,
       currentQuestion: 0,
       currentSymptom: 0,
-      childName: null,
+      childId: null,
+      childName: '',
       childSymptoms: [],
       accepted: false,
-      rejected: false,
-      homeHours: 24
+      popupRequiredActions: [],
+      popupBus: new Vue(),
+      abscenceReasons: []
     }
   },
   computed: {
-    symptomsPresentTitle() {
-      return 'We\'re sorry to hear that ' + this.childName + ' is feeling unwell'
-    },
     questionFootnotes() {
       return questions[this.currentQuestion].footnotes
     },
@@ -206,26 +112,33 @@ export default {
     },
     questionTitle() {
       return questions[this.currentQuestion].text
-    },
-    showIdRequestScreen() {
-      return !this.scanInProgress && !this.questionnaireInProgress
-    },
-    codeNotProvided() {
-      return !this.qrCode || !this.qrCode.length
     }
   },
   methods: {
-    removeLastSymptomAndCloseHomeAndIsolate() {
-      this.childSymptoms.pop()
-      this.$bvModal.hide('homeAndIsolate')
+    showRequiredActionsForMildSymptom(symptom) {
+      const homeHours = (symptom.actionCode === 'home48') ? 48 : 24
+      this.popupRequiredActions = [
+        {
+          title: 'Stay home for ' + homeHours + ' hours',
+          description: 'Stay home until symptoms improve for at least ' + homeHours + ' hours. Other household members do not have to self-isolate.',
+          imageSrc: '/images/home.png'
+        }
+      ]
+      this.popupBus.$emit('show')
     },
-    removeLastSymptomAndCloseFederalQuarantine() {
-      this.childSymptoms.pop()
-      this.$bvModal.hide('federalQuarantine')
+    notifyStaffAboutChildSymptoms() {
+      console.log(this.childName + ' has ' + this.childSymptoms.map((s) => s.name).join(','))
+      this.accepted = false
+      this.rejected = true
+      this.questionnaireInProgress = false
+      this.questionnaireCompleted = true
+      this.abscenceReasons = this.childSymptoms.map((s) => { return { title: s.name, imageSrc: s.image}})
+      this.popupBus.$emit('hide')
     },
-    removeLastSymptomAndCloseHome24() {
+    cancelLastSymptom() {
       this.childSymptoms.pop()
-      this.$bvModal.hide('home24')
+      this.popupRequiredActions = []
+      this.popupBus.$emit('hide')
     },
     markSymptomAsNegative() {
       const q = questions[this.currentQuestion]
@@ -234,12 +147,13 @@ export default {
       if (isLastSymptomForQuestion === false) {
         this.currentSymptom++
       } else if (isPartBQuestion && this.childSymptoms.length > 0) {
-        this.homeHours = (this.childSymptoms[0].actionCode === 'home24') ? 24 : 48
-        this.$bvModal.show('home24')
+        this.showRequiredActionsForMildSymptom(this.childSymptoms[0])
       } else if (this.currentQuestion < questions.length - 1) {
         this.currentQuestion++
         this.currentSymptom = 0
       } else {
+        this.questionnaireInProgress = false
+        this.questionnaireCompleted = true
         this.accepted = true
       }
     },
@@ -250,70 +164,50 @@ export default {
       this.childSymptoms.push(symptom)
       const homeAndIsolate = 'homeAndIsolate';
       if (symptom.actionCode === homeAndIsolate) {
-        this.$bvModal.show(symptom.actionCode)
+        this.popupRequiredActions = requiredActionsForCovidSymptoms
+        this.popupBus.$emit('show')
       } else if (isPartBQuestion) {
         const isLastSymptomFromThisQuestion = this.currentSymptom === q.symptoms.length - 1
         if (this.childSymptoms.length > 1) {
-          this.$bvModal.show(homeAndIsolate)
+          this.popupRequiredActions = requiredActionsForCovidSymptoms
+          this.popupBus.$emit('show')
         } else if (isLastSymptomFromThisQuestion) {
-          this.homeHours = (symptom.actionCode === 'home48') ? 48 : 24
-          this.$bvModal.show('home24')
+          this.showRequiredActionsForMildSymptom(symptom)
         } else {
           this.currentSymptom++
         }
+      } else if (symptom.actionCode === 'testedPositive') {
+        this.popupRequiredActions = requiredActionsWhenTestedPositive
+        this.popupBus.$emit('show')
+      } else if (symptom.actionCode === 'closeContact') {
+        this.popupRequiredActions = [
+          {
+            title: 'Stay home & self-isolate.',
+            description: 'Must self-isolate for 10 days from their last exposure.',
+            imageSrc: '/images/home.png'
+          }
+        ]
+        this.popupBus.$emit('show')
       } else if (symptom.actionCode === 'federalQuarantine') {
-        this.$bvModal.show(symptom.actionCode)
+        this.popupRequiredActions = [
+          {
+            title: 'Follow federal quarantine travel rules.',
+            description: 'The child/student must follow federal requirements for quarantine and testing after returning from international travel.' +
+                  ' If the child/student is not fully vaccinated, they are not to attend school/child care for 14 days, even if they traveled with a vaccinated companion. ' +
+                  'Federal travel rules can be accessed at the following link https://travel.gc.ca/travel-covid/travel-restrictions/exemptions',
+            imageSrc: '/images/travel_rules.png'
+          }
+        ]
+        this.popupBus.$emit('show')
       }
     },
-    receiveScanCode(code) {
-      this.qrCode = code
-      this.scanInProgress = false
-      this.qrScanner.stop()
-      this.validateCode()
-    },
-    codeUpdatedManually() {
-      this.errorMessage = null
-    },
-    stopScanner() {
-      this.qrScanner.stop()
-      this.scanInProgress = false
-    },
-    startScanner() {
-      this.scanInProgress = true
-      this.errorMessage = null
-      this.qrScanner.start()
-    },
-    isQrCodeValid() {
-      return this.qrCode && this.qrCode.length >= 10
-    },
-    startQuestionnaire() {
+    startQuestionnaire(idInfo) {
+      this.childId = idInfo
+      this.childName = idInfo.name
+      this.identificationInProgress = false
       this.currentQuestion = 0
       this.questionnaireInProgress = true
-    },
-    validateCode() {
-      if (this.isQrCodeValid()) {
-        this.childName = 'Joanne Doe'
-        this.startQuestionnaire()
-      } else {
-        this.errorMessage = 'Invalid code'
-      }
     }
-  },
-  mounted() {
-    QrScanner
-        .hasCamera()
-        .then((result) => {
-          if (result === true) {
-            this.cameraMsg = 'Start scanning'
-            this.cameraAvailable = true
-            this.qrScanner = new QrScanner(this.$refs['scanner'], this.receiveScanCode)
-          } else {
-            this.cameraMsg = 'Camera not available'
-          }
-        })
-        .catch((err) => {
-          this.cameraMsg = err;
-        })
   }
 }
 </script>

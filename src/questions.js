@@ -75,7 +75,7 @@ export const questions = [
             }
         ],
         symptoms: [
-            { name: 'Tested positive for COVID-19', image: '/images/positive.png', actionCode: 'homeAndIsolate'}
+            { name: 'Tested positive for COVID-19', image: '/images/positive.png', actionCode: 'testedPositive'}
         ]
     },
     {
@@ -83,7 +83,15 @@ export const questions = [
         text: '3. In the last 10 days has the student/child been notified as a close contact of someone with COVID-19, or received a COVID Alert notification?',
         footnotes: [
             {
-                label: 'What are the exemptions?',
+                label: 'What if the child is vaccinated?',
+                description: 'If child is not immune compromised AND is fully vaccinated AND has no symptoms, then she/he does not need to self-isolate. ' +
+                    'Monitor for symptoms for 10 days and self-isolate immediately if symptoms develop. ' +
+                    'If leaving home, they should maintain masking, physical distancing and all other public health measures. They ' +
+                    'should NOT visit any highest risk settings or individuals who may be at higher risk of illness (e.g., seniors) for ' +
+                    '10 days from their last exposure.'
+            },
+            {
+                label: 'What are other exemptions?',
                 description: 'If the person is not a household member AND the student/child is fully vaccinated or public health has told you that you do not need to self-isolate, select “No”'
             },
             {
@@ -92,13 +100,22 @@ export const questions = [
             }
         ],
         symptoms: [
-            { name: 'Close contact notification', image: '/images/close_contact.png', actionCode: 'homeAndIsolate'}
+            { name: 'Close contact notification', image: '/images/close_contact.png', actionCode: 'closeContact'}
         ]
     },
     {
         idx: 5,
-        text: '4. In the last 14 days, has the student/child travelled outside of Canada?',
-        footnotes: [],
+        text: '4. In the last 14 days, has the student/child travelled outside of Canada? If the child/student is not fully vaccinated, they are not to attend school/child care for 14 days, even if they traveled with a vaccinated companion.',
+        footnotes: [
+            {
+                label: 'What if the child is fully vaccinated?',
+                description: 'If the rules described in federal requirements(https://travel.gc.ca/travel-covid/travel-restrictions/exemptions) for quarantine and testing after returning from international travel allow attendance, then press "No".'
+            },
+            {
+                label: 'Whom to consider fully vaccinated?',
+                description: 'Fully vaccinated means 14 days or more after a second dose of a COVID-19 vaccine series, or as defined by the Ontario Ministry of Health.'
+            }
+        ],
         symptoms: [
             { name: 'Travelled outside of Canada', image: '/images/travel.png', actionCode: 'federalQuarantine'}
         ]
