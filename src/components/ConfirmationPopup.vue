@@ -5,7 +5,6 @@
           title="In order to help slow down the spread of COVID-19, the following actions are required"
           ok-title="Acknowledge & Notify Staff"
           cancel-title="Go back"
-          @cancel="$emit('back')"
           @ok="$emit('acknowledged')"
           no-close-on-esc no-close-on-backdrop hide-header-close
       >

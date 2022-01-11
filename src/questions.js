@@ -1,7 +1,7 @@
 export const questions = [
     {
         idx: 1,
-        text: '1-A. Does the child/student or anyone in the household have this new or worsening symptom, today, or in the last 5 or 10 days?',
+        text: '1-A. Does the child/student or anyone in the household have 1 or more of these new or worsening symptoms, today, or in the last 5 or 10 days? ',
         footnotes: [
             {
                 label: 'What about pre-existing conditions?',
@@ -29,7 +29,7 @@ export const questions = [
     },
     {
         idx: 2,
-        text: '1-B. Does the child/student or anyone in the household have this new or worsening symptom today, or in the last 5 or 10 days?',
+        text: '1-B. Does the child/student or anyone in the household have 2 or more of these new or worsening symptoms today, or in the last 5 or 10 days?',
         footnotes: [
             {
               label: 'What about pre-existing conditions?',
