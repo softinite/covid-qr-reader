@@ -30,7 +30,7 @@
             </b-col>
           </b-row>
           <b-row>
-            <b-col><b-button variant="outline-dark" @click="$emit('previous')">Previous</b-button></b-col>
+            <b-col><b-button variant="outline-dark" @click="$emit('previous')" v-show="question.idx > 1">Previous</b-button></b-col>
             <b-col><b-button variant="primary" :disabled="thereAreUnselectedSymptoms" @click="validateAndSubmit">Next</b-button></b-col>
           </b-row>
           <b-row>

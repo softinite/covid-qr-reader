@@ -19,6 +19,7 @@
               :question="currentQuestion"
               @nosymptoms="goToTheNextQuestion"
               @symptoms="goToRejectionScreen"
+              @previous="goBack"
           />
           <final-screen v-show="questionnaireCompleted" :accepted="accepted" :reasons="abscenceReasons"/>
         </b-col>
@@ -57,6 +58,11 @@ export default {
     }
   },
   methods: {
+    goBack() {
+      if (this.currentQuestion.idx > 1) {
+        this.currentQuestion = questions[this.currentQuestion.idx - 2]
+      }
+    },
     goToRejectionScreen(symptoms) {
       this.accepted = false
       this.questionnaireInProgress = false
