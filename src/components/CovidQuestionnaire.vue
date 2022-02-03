@@ -4,7 +4,7 @@
       <b-row>
         <b-col>
           <h2>COVID-19 Screening</h2>
-          <div v-show="childName.length > 0">Child name: {{childName}}</div>
+          <div v-show="childName.length > 0">{{childName}}</div>
         </b-col>
       </b-row>
       <b-row align-h="center" align-v="center">
@@ -39,6 +39,7 @@ import {questions} from '@/questions'
 import Question from "@/components/Question";
 import FinalScreen from "@/components/FinalScreen";
 import IdentificationScreen from "@/components/IdentificationScreen";
+import {configuration} from "@/config";
 
 export default {
   name: 'CovidQuestionnaire',
@@ -51,7 +52,7 @@ export default {
       questionnaireInProgress: false,
       questionnaireCompleted: false,
       currentQuestion: questions[0],
-      childInfo: null,
+      childCode: null,
       childName: '',
       accepted: false,
       abscenceReasons: []
@@ -79,7 +80,7 @@ export default {
       }
     },
     startQuestionnaire(idInfo) {
-      this.childInfo = idInfo
+      this.childCode = idInfo.code
       this.childName = idInfo.name
       this.identificationInProgress = false
       this.currentQuestion = questions[0]

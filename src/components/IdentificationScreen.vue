@@ -41,6 +41,7 @@
 <script>
 import QrScanner from 'qr-scanner'
 import qrScannerWorkerSource from '!!raw-loader!../../node_modules/qr-scanner/qr-scanner-worker.min.js';
+import {configuration} from '@/config'
 
 QrScanner.WORKER_PATH = URL.createObjectURL(new Blob([qrScannerWorkerSource]));
 
@@ -59,7 +60,29 @@ export default {
   methods: {
     validateCode() {
       if (this.isQrCodeValid()) {
-        this.$emit('id-confirmed', { id: '1111111111', name: 'Joanne Doe'})
+        console.info('Config is ', configuration)
+        fetch(configuration.apiUrl + '/codes', {
+          method: 'get',
+          headers: {'Content-Type': 'application/json', 'code': this.qrCode}
+        })
+        .then((response) => {
+          if (response.status === 200) {
+            response
+              .json()
+              .then((info) => this.$emit('id-confirmed', info))
+              .catch((err) => {
+                console.error('Failed to convert response to json from code ' + this.qrCode, err)
+                this.errorMessage = 'We\'re sorry, it looks like the connection to the server is broken. Please try again later.'
+              })
+          } else {
+            console.error('Server responded with status ' + response.status + ' while trying to fetch info for the code ' + this.qrCode)
+            this.errorMessage = 'We\'re sorry, it looks like the server sent an invalid response. Please try again later.'
+          }
+        })
+        .catch((err) => {
+          console.error('Failed to fetch child info from code ' + this.qrCode, err)
+          this.errorMessage = 'We\'re sorry, we could not connect to the server. Please try again later.'
+        })
       } else {
         this.errorMessage = 'Invalid code'
       }
@@ -83,7 +106,7 @@ export default {
       this.qrScanner.start()
     },
     isQrCodeValid() {
-      return this.qrCode && this.qrCode.length > 0
+      return this.qrCode && this.qrCode.length >= 10
     },
   },
   computed: {
@@ -92,20 +115,26 @@ export default {
     }
   },
   mounted() {
-    QrScanner
-        .hasCamera()
-        .then((result) => {
-          if (result === true) {
-            this.cameraMsg = 'Start scanning'
-            this.cameraAvailable = true
-            this.qrScanner = new QrScanner(this.$refs['scanner'], this.receiveScanCode)
-          } else {
-            this.cameraMsg = 'Camera not available'
-          }
-        })
-        .catch((err) => {
-          this.cameraMsg = err;
-        })
+    const codeFromUrl = new URL(location.href).searchParams.get('code')
+    if (codeFromUrl && codeFromUrl.length >= 10) {
+      this.qrCode = codeFromUrl
+      this.validateCode()
+    } else {
+      QrScanner
+          .hasCamera()
+          .then((result) => {
+            if (result === true) {
+              this.cameraMsg = 'Start scanning'
+              this.cameraAvailable = true
+              this.qrScanner = new QrScanner(this.$refs['scanner'], this.receiveScanCode)
+            } else {
+              this.cameraMsg = 'Camera not available'
+            }
+          })
+          .catch((err) => {
+            this.cameraMsg = err;
+          })
+    }
   }
 }
 
