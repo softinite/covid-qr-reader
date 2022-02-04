@@ -1,6 +1,6 @@
 <template>
   <div>
-    <b-container id="entryAccepted" v-show="accepted">
+    <b-container id="entryAccepted" v-show="$store.state.accepted">
       <b-row align-v="center" align-h="center">
         <b-col>
           <b-card title="Thank you for taking the questionnaire">
@@ -15,7 +15,7 @@
         </b-col>
       </b-row>
     </b-container>
-    <b-container id="entryRejected" v-show="!accepted">
+    <b-container id="entryRejected" v-show="!$store.state.accepted">
       <b-row align-v="center" align-h="center">
         <b-col>
           <b-card title="Thank you for taking the questionnaire" class="">
@@ -44,10 +44,6 @@
 export default {
   name: 'FinalScreen',
   props: {
-    accepted: {
-      required: true,
-      type: Boolean
-    },
     reasons: {
       required: false,
       type: Array,

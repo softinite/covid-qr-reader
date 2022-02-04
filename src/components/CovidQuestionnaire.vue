@@ -4,24 +4,20 @@
       <b-row>
         <b-col>
           <h2>COVID-19 Screening</h2>
-          <div v-show="childName.length > 0">{{childName}}</div>
+          <div v-show="$store.state.childInfo.name.length > 0">{{$store.state.childInfo.name}}</div>
         </b-col>
       </b-row>
       <b-row align-h="center" align-v="center">
         <b-col>
-          <identification-screen
-              v-show="identificationInProgress"
-              @id-confirmed="startQuestionnaire"
-          />
+          <identification-screen v-show="$store.state.identificationInProgress" />
           <question
-              v-show="questionnaireInProgress"
-              :child-name="childName"
+              v-show="$store.state.questionnaireInProgress"
               :question="currentQuestion"
               @nosymptoms="goToTheNextQuestion"
               @symptoms="goToRejectionScreen"
               @previous="goBack"
           />
-          <final-screen v-show="questionnaireCompleted" :accepted="accepted" :reasons="abscenceReasons"/>
+          <final-screen v-show="$store.state.completed" :reasons="absenceReasons"/>
         </b-col>
       </b-row>
       <b-row class="mt-4">
@@ -35,56 +31,36 @@
 </template>
 
 <script>
-import {questions} from '@/questions'
 import Question from "@/components/Question";
 import FinalScreen from "@/components/FinalScreen";
 import IdentificationScreen from "@/components/IdentificationScreen";
-import {configuration} from "@/config";
 
 export default {
   name: 'CovidQuestionnaire',
   components: {IdentificationScreen, FinalScreen, Question},
-  props: {
-  },
   data() {
     return {
-      identificationInProgress: true,
-      questionnaireInProgress: false,
-      questionnaireCompleted: false,
-      currentQuestion: questions[0],
-      childCode: null,
-      childName: '',
-      accepted: false,
-      abscenceReasons: []
+      allQuestions: this.$store.state.questions,
+      currentQuestion: this.$store.state.questions[0],
+      absenceReasons: []
     }
   },
   methods: {
     goBack() {
       if (this.currentQuestion.idx > 1) {
-        this.currentQuestion = questions[this.currentQuestion.idx - 2]
+        this.currentQuestion = this.allQuestions[this.currentQuestion.idx - 2]
       }
     },
     goToRejectionScreen(symptoms) {
-      this.accepted = false
-      this.questionnaireInProgress = false
-      this.questionnaireCompleted = true
-      this.abscenceReasons = symptoms.map(s => { return { title: s.name, imageSrc: s.image} })
+      this.$store.dispatch('notifyChildIsUnwell', symptoms.map(s => s.name))
+      this.absenceReasons = symptoms.map(s => { return { title: s.name, imageSrc: s.image} })
     },
     goToTheNextQuestion() {
-      if (this.currentQuestion.idx < questions.length) {
-        this.currentQuestion = questions[this.currentQuestion.idx]
+      if (this.currentQuestion.idx < this.allQuestions.length) {
+        this.currentQuestion = this.allQuestions[this.currentQuestion.idx]
       } else {
-        this.accepted = true
-        this.questionnaireInProgress = false
-        this.questionnaireCompleted = true
+        this.$store.dispatch('notifyChildIsWell')
       }
-    },
-    startQuestionnaire(idInfo) {
-      this.childCode = idInfo.code
-      this.childName = idInfo.name
-      this.identificationInProgress = false
-      this.currentQuestion = questions[0]
-      this.questionnaireInProgress = true
     }
   }
 }

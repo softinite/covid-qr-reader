@@ -41,7 +41,6 @@
 <script>
 import QrScanner from 'qr-scanner'
 import qrScannerWorkerSource from '!!raw-loader!../../node_modules/qr-scanner/qr-scanner-worker.min.js';
-import {configuration} from '@/config'
 
 QrScanner.WORKER_PATH = URL.createObjectURL(new Blob([qrScannerWorkerSource]));
 
@@ -60,29 +59,7 @@ export default {
   methods: {
     validateCode() {
       if (this.isQrCodeValid()) {
-        console.info('Config is ', configuration)
-        fetch(configuration.apiUrl + '/codes', {
-          method: 'get',
-          headers: {'Content-Type': 'application/json', 'code': this.qrCode}
-        })
-        .then((response) => {
-          if (response.status === 200) {
-            response
-              .json()
-              .then((info) => this.$emit('id-confirmed', info))
-              .catch((err) => {
-                console.error('Failed to convert response to json from code ' + this.qrCode, err)
-                this.errorMessage = 'We\'re sorry, it looks like the connection to the server is broken. Please try again later.'
-              })
-          } else {
-            console.error('Server responded with status ' + response.status + ' while trying to fetch info for the code ' + this.qrCode)
-            this.errorMessage = 'We\'re sorry, it looks like the server sent an invalid response. Please try again later.'
-          }
-        })
-        .catch((err) => {
-          console.error('Failed to fetch child info from code ' + this.qrCode, err)
-          this.errorMessage = 'We\'re sorry, we could not connect to the server. Please try again later.'
-        })
+        this.$store.dispatch('fetchChildInfo', this.qrCode).catch((err) => this.errorMessage = err)
       } else {
         this.errorMessage = 'Invalid code'
       }

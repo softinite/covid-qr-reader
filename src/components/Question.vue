@@ -97,10 +97,6 @@ export default {
     question: {
       required: true,
       type: Object
-    },
-    childName: {
-      required: true,
-      type: String
     }
   },
   watch: {
