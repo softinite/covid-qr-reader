@@ -64,8 +64,8 @@ export default {
         this.errorMessage = 'Invalid code'
       }
     },
-    receiveScanCode(code) {
-      this.qrCode = code
+    receiveScanCode(url) {
+      this.qrCode = (url && url.length > 0 && url.indexOf('?code=') > 0) ? url.split('?code=')[1] : ''
       this.scanInProgress = false
       this.qrScanner.stop()
       this.validateCode()

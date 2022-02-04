@@ -9,21 +9,21 @@
                 <b-row>
                   <b-col><b>{{symptom.name}}</b></b-col>
                 </b-row>
-                <b-row align-v="center">
+                <b-row>
                   <b-col>
                     <b-form-group class="float-end">
                       <b-form-radio-group
                           v-model="yes[idx]"
                           :options="['Yes', 'No']"
                           :name="'symptom-' + idx"
-                          plain
+                          buttons
+                          button-variant="outline-primary"
                           stacked
-                          class=""
                       ></b-form-radio-group>
                     </b-form-group>
                   </b-col>
                   <b-col>
-                    <b-img class="float-start" thumbnail fluid width="110" height="110" rounded :alt="symptom.name" :title="symptom.name" :src="symptom.image"/>
+                    <b-img class="float-start" thumbnail fluid width="110" height="110" rounded="true" :alt="symptom.name" :title="symptom.name" :src="symptom.image"/>
                   </b-col>
                 </b-row>
               </b-container>
