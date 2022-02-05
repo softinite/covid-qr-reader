@@ -64,8 +64,11 @@ export default {
         this.errorMessage = 'Invalid code'
       }
     },
+    extractCodeFromUrl(url) {
+      return (url && url.length > 0 && url.indexOf('?code=') > 0) ? url.split('?code=')[1] : ''
+    },
     receiveScanCode(url) {
-      this.qrCode = (url && url.length > 0 && url.indexOf('?code=') > 0) ? url.split('?code=')[1] : ''
+      this.qrCode = this.extractCodeFromUrl(url)
       this.scanInProgress = false
       this.qrScanner.stop()
       this.validateCode()
@@ -92,7 +95,7 @@ export default {
     }
   },
   mounted() {
-    const codeFromUrl = new URL(location.href).searchParams.get('code')
+    const codeFromUrl = this.extractCodeFromUrl(location.href)
     if (codeFromUrl && codeFromUrl.length >= 10) {
       this.qrCode = codeFromUrl
       this.validateCode()

@@ -8,6 +8,7 @@ import VueMatomo from 'vue-matomo'
 import {configuration} from '@/config'
 import * as Sentry from "@sentry/vue";
 import { BrowserTracing } from "@sentry/tracing";
+import router from './router'
 
 Vue.config.productionTip = configuration.isProd
 
@@ -19,6 +20,13 @@ Vue.use(IconsPlugin)
 Sentry.init({
   Vue,
   dsn: "https://6254ba11e2704d3c81fdfea295d856b3@o1125895.ingest.sentry.io/6187776",
+  beforeSend(event) {
+    // Check if it is an exception, and if so, show the report dialog
+    if (event.exception) {
+      Sentry.showReportDialog({ eventId: event.event_id });
+    }
+    return event;
+  },
   integrations: [
     new BrowserTracing({
       routingInstrumentation: Sentry.vueRouterInstrumentation(router),
@@ -36,6 +44,7 @@ Vue.use(VueMatomo, {
   host: configuration.matomoUrl,
   siteId: configuration.matomoSiteId,
   trackerFileName: 'owenclcinsights',
+  router: router,
   enableLinkTracking: true,
   requireConsent: false,
   trackInitialView: true,
@@ -56,5 +65,6 @@ Vue.use(VueMatomo, {
 
 new Vue({
   store,
+  router,
   render: h => h(App)
 }).$mount('#app')
