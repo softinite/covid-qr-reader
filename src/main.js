@@ -19,6 +19,7 @@ Vue.use(IconsPlugin)
 
 Sentry.init({
   Vue,
+  environment: configuration.name,
   dsn: "https://6254ba11e2704d3c81fdfea295d856b3@o1125895.ingest.sentry.io/6187776",
   beforeSend(event) {
     // Check if it is an exception, and if so, show the report dialog
@@ -30,13 +31,10 @@ Sentry.init({
   integrations: [
     new BrowserTracing({
       routingInstrumentation: Sentry.vueRouterInstrumentation(router),
-      tracingOrigins: ["localhost", "qr.owenclc.com", /^\//],
+      tracingOrigins: ["localhost", "qr.owenclc.com"],
     }),
   ],
-  // Set tracesSampleRate to 1.0 to capture 100%
-  // of transactions for performance monitoring.
-  // We recommend adjusting this value in production
-  tracesSampleRate: 1.0,
+  tracesSampleRate: configuration.sentrySampleRate,
 });
 
 Vue.use(VueMatomo, {
