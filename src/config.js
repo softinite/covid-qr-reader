@@ -17,8 +17,8 @@ const prod = {
 }
 
 const config = {
-    dev: dev,
-    prod: prod
+    development: dev,
+    production: prod
 }
 
 export const configuration = config[process.env.NODE_ENV]
