@@ -56,7 +56,7 @@ Vue.use(VueMatomo, {
   // Default: undefined
   userId: undefined,
   cookieDomain: '*.owenclc.com',
-  domains: 'server.iva,*.owenclc.com',
+  domains: 'server.iva,qr.owenclc.com',
   preInitActions: [],
   trackSiteSearch: false
 });
