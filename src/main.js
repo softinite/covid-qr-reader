@@ -41,7 +41,7 @@ Vue.use(VueMatomo, {
   // Configure your matomo server and site by providing
   host: configuration.matomoUrl,
   siteId: configuration.matomoSiteId,
-  trackerFileName: 'owenclcinsights',
+  trackerFileName: 'matomo',
   router: router,
   enableLinkTracking: true,
   requireConsent: false,

@@ -26,6 +26,9 @@
           TPH version takes precedence.
         </b-col>
       </b-row>
+      <b-row>
+        <b-col class="small"><b-link target="_blank" href="https://www.termsfeed.com/live/77f44020-2092-448f-9003-f27845a88155">Privacy Policy</b-link></b-col>
+      </b-row>
     </b-container>
   </div>
 </template>
